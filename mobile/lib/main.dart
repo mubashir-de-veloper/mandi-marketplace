@@ -1,6 +1,9 @@
 
 import 'package:flutter/material.dart';
 
+import 'models/mandi_rate.dart';
+import 'services/mandi_rate_service.dart';
+
 const green = Color(0xFF176B3A);
 const paleGreen = Color(0xFFE8F3E9);
 const pageBg = Color(0xFFF6F8F5);
@@ -294,25 +297,32 @@ class RatesScreen extends StatefulWidget {
   State<RatesScreen> createState() => _RatesScreenState();
 }
 
+
 class _RatesScreenState extends State<RatesScreen> {
   String search = '';
   String city = 'All cities';
   String category = 'All';
 
+  final MandiRateService _rateService = MandiRateService();
+  late Future<List<MandiRate>> _ratesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _ratesFuture = _rateService.fetchRates();
+  }
+
+  void _loadRates() {
+    setState(() {
+      _ratesFuture = _rateService.fetchRates(
+        city: city,
+      );
+    });
+  }
+  
+  
   @override
   Widget build(BuildContext context) {
-    final results = produceList.where((item) {
-      final matchesSearch =
-      '${item.name} ${item.urdu}'.toLowerCase().contains(
-        search.toLowerCase(),
-      );
-      final matchesCity = city == 'All cities' || item.location == city;
-      final matchesCategory =
-          category == 'All' || item.category == category;
-
-      return matchesSearch && matchesCity && matchesCategory;
-    }).toList();
-
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -321,34 +331,46 @@ class _RatesScreenState extends State<RatesScreen> {
           subtitle: 'Find commodities by name, category and city.',
         ),
         const SizedBox(height: 16),
+
         SearchBox(
           hint: 'Search wheat, rice, vegetables...',
           onChanged: (value) => setState(() => search = value),
         ),
         const SizedBox(height: 12),
+
         DropdownButtonFormField<String>(
-          value: city,
+          initialValue: city,
           decoration: const InputDecoration(
             prefixIcon: Icon(Icons.location_on_outlined),
             labelText: 'Select mandi / city',
           ),
           items: [
             'All cities',
+            'Karachi',
             'Lahore',
-            'Gujranwala',
-            'Faisalabad',
+            'Rawalpindi',
             'Multan',
           ].map((value) {
-            return DropdownMenuItem(value: value, child: Text(value));
+            return DropdownMenuItem(
+              value: value,
+              child: Text(value),
+            );
           }).toList(),
-          onChanged: (value) => setState(() => city = value!),
+          onChanged: (value) {
+            if (value != null) {
+              setState(() => city = value);
+              _loadRates();
+            }
+          },
         ),
         const SizedBox(height: 16),
+
         const Text(
           'Commodity category',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
+
         Wrap(
           spacing: 8,
           children: ['All', 'Grains', 'Vegetables', 'Other'].map((value) {
@@ -360,27 +382,126 @@ class _RatesScreenState extends State<RatesScreen> {
           }).toList(),
         ),
         const SizedBox(height: 18),
-        Text(
-          '${results.length} commodities found',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        if (results.isEmpty)
-          const EmptyState(
-            icon: Icons.search_off,
-            title: 'No commodities found',
-            subtitle: 'Try another name, category or city.',
-          ),
-        ...results.map(
-              (item) => ProduceCard(
-            produce: item,
-            onTap: () => openProduceDetails(context, item),
-          ),
-        ),
-        const SizedBox(height: 10),
-        const NoticeBox(
-          text:
-          'Rates are demonstration values. An official source will be integrated later.',
+
+        FutureBuilder<List<MandiRate>>(
+          future: _ratesFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.all(32),
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Column(
+                children: [
+                  const Icon(
+                    Icons.cloud_off,
+                    size: 42,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('Could not load mandi rates.'),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Check that your backend is running and try again.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    onPressed: _loadRates,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              );
+            }
+
+            final rates = snapshot.data ?? [];
+
+            final results = rates.where((rate) {
+              final query = search.toLowerCase().trim();
+
+              final matchesSearch =
+                  '${rate.commodityName} ${rate.marketName} ${rate.city}'
+                      .toLowerCase()
+                      .contains(query);
+
+              final matchesCategory =
+                  category == 'All' || rate.category == category;
+
+              return matchesSearch && matchesCategory;
+            }).toList();
+
+            if (results.isEmpty) {
+              return const EmptyState(
+                icon: Icons.search_off,
+                title: 'No mandi rates found',
+                subtitle: 'Try another name, category or city.',
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${results.length} mandi rates found',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                ...results.map((rate) {
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            rate.commodityName,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text('${rate.marketName}, ${rate.city}'),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Rs. ${rate.minPrice.toStringAsFixed(2)}'
+                            ' – Rs. ${rate.maxPrice.toStringAsFixed(2)}'
+                            ' / ${rate.unit == 'pkr_per_100kg' ? '100 kg' : rate.unit == 'pkr_per_kg' ? 'kg' : rate.unit == 'pkr_per_dozen' ? 'dozen' : rate.unit}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text('Category: ${rate.category}'),
+                          Text('Province: ${rate.province}'),
+                          Text('Source: ${rate.sourceName}'),
+                          Text(
+                            'Date: ${rate.rateDate.toLocal().toString().split(' ').first}',
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+
+                const SizedBox(height: 8),
+                const NoticeBox(
+                  text:
+                      'Rates provided by PakDataHub. Check the source and date '
+                      'before making buying or selling decisions.',
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
