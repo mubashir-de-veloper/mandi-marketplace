@@ -1,3 +1,147 @@
+# Mandi Marketplace — Direct Agriculture Marketplace
+
+A Flutter-based Android application designed to help farmers, buyers, and produce traders compare mandi prices, report observed market prices, and connect through a direct agricultural marketplace.
+
+## Problem Statement
+
+Agricultural producers and buyers may lack a convenient way to compare official mandi rates with prices observed in local markets. Limited price visibility can make it harder to make informed selling and purchasing decisions.
+
+## Solution
+
+Mandi Marketplace brings mandi-rate information and community-reported street prices into one mobile application. It also provides account authentication and a foundation for direct agricultural trading.
+
+## Key Features
+
+- **Mandi rates:** Retrieve mandi-rate data through the deployed backend API.
+- **Street-price reporting:** Signed-in users can submit observed commodity prices for a selected city, commodity, and unit.
+- **Price reports:** View submitted reports and their verification status.
+- **User authentication:** Register, log in, view account details, and sign out.
+- **Marketplace interface:** Access the app's agricultural marketplace screens.
+- **REST API:** Connect the Android application to a hosted backend and PostgreSQL database.
+
+> Price reports are user-submitted observations. They should not be treated as official government rates unless independently verified against an authoritative source.
+
+## Technology Stack
+
+| Component | Technology |
+|---|---|
+| Mobile application | Flutter and Dart |
+| UI | Flutter Material components |
+| API | Node.js and Express |
+| Hosting | Vercel |
+| Database | Neon PostgreSQL |
+| HTTP communication | REST API over HTTPS |
+| Authentication | JWT bearer tokens |
+| Secure token storage | Flutter Secure Storage |
+| Source control | Git and GitHub |
+
+## Architecture
+
+The Android application communicates with the backend through HTTPS REST endpoints. The backend handles requests, authentication, and database operations. Mandi-rate data is obtained through the backend's configured data source.
+
+See the architecture diagram below in this README or in the project's documentation.
+
+![Alt text](mermaid-diagram.png)
+
+## Live Links
+
+- **GitHub repository:** https://github.com/mubashir-de-veloper/mandi-marketplace
+- **Backend API:** https://mandi-marketplace-api.vercel.app/
+- **Health check:** https://mandi-marketplace-api.vercel.app/api/health
+
+The backend root URL confirms that the API is running. The health endpoint checks backend/database availability.
+
+## Run the Android App Locally
+
+### Prerequisites
+
+- Flutter SDK
+- Dart SDK (included with Flutter)
+- Android Studio and an Android emulator, or a compatible Android device
+- Git
+
+### Setup
+
+Clone the repository:
+
+```bash
+git clone https://github.com/mubashir-de-veloper/mandi-marketplace.git
+cd mandi-marketplace/mobile
+```
+
+Install dependencies:
+
+```bash
+flutter pub get
+```
+
+Check the development environment:
+
+```bash
+flutter doctor
+```
+
+Run static analysis:
+
+```bash
+flutter analyze
+```
+
+Launch the app on a connected Android device or emulator:
+
+```bash
+flutter run
+```
+
+### Build a Release APK
+
+```bash
+flutter build apk --release
+```
+
+The generated APK is located at:
+
+```text
+build/app/outputs/flutter-apk/app-release.apk
+```
+
+Run the build command from the `mobile` directory.
+
+## Backend
+
+The deployed backend is hosted at:
+
+```text
+https://mandi-marketplace-api.vercel.app
+```
+
+The backend uses Node.js, Express, and PostgreSQL. Database credentials and authentication secrets should be configured through environment variables in the deployment platform. Never commit `.env` files, database passwords, JWT secrets, or other credentials to GitHub.
+
+For local backend development, install dependencies in the `backend` directory and configure the required environment variables using the project's backend configuration.
+
+## Testing and Validation
+
+The following checks have been completed during development:
+
+- Flutter static analysis completed with no issues.
+- Release APK built successfully.
+- Login and account profile display tested.
+- Sign-out flow tested.
+- Street-price report submission tested.
+- Deployed backend health check and database connection confirmed.
+
+These checks describe the tested development state; they do not imply that every feature has undergone independent production or security testing.
+
+## Project Goals
+
+The project aims to improve agricultural price visibility and support more direct connections between farmers, buyers, and produce traders.
+
+Potential future improvements include stronger report-verification workflows, expanded marketplace transactions, offline data access, and synchronization when connectivity returns.
+
+## Maintainer
+
+Developed as a mobile application project using Flutter, Node.js, Express, and PostgreSQL.
+
 # Mandi Rate & Direct Agriculture Marketplace
 
 An Android application designed to help farmers, buyers, and sellers access official mandi rates, report actual market prices, compare prices, and trade agricultural products directly.
