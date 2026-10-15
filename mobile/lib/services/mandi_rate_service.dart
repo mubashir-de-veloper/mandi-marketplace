@@ -7,7 +7,7 @@ import '../models/mandi_rate.dart';
 
 class MandiRateService {
   // Android emulator uses 10.0.2.2 to reach your Windows host.
-  static const String baseUrl = 'http://10.0.2.2:5000';
+  static const String baseUrl = 'https://mandi-marketplace-api.vercel.app';
 
   Future<List<MandiRate>> fetchRates({String? city}) async {
     final queryParameters = <String, String>{};
