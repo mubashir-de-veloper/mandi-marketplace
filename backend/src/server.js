@@ -59,7 +59,11 @@ app.use((req, res) => {
 });
 
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Mandi Marketplace API running on port ${PORT}`);
-});
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Mandi Marketplace API running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
